@@ -1,4 +1,4 @@
-hubot-plusplus
+hubot-plusplus-improved
 ==============
 
 Give (or take away) points from people and things, all from the comfort of your
@@ -36,21 +36,21 @@ robot.emit "plus-one", {
 
 Run the following command 
 
-    $ npm install hubot-plusplus
+    $ npm install hubot-plusplus-improved
 
 Then to make sure the dependencies are installed:
 
     $ npm install
 
-To enable the script, add a `hubot-plusplus` entry to the `external-scripts.json`
+To enable the script, add a `hubot-plusplus-improved` entry to the `external-scripts.json`
 file (you may need to create this file).
 
-    ["hubot-plusplus"]
+    ["hubot-plusplus-improved"]
 
 ## Configuration
 
 Some of the behavior of this plugin is configured in the environment:
 
 `HUBOT_PLUSPLUS_KEYWORD` - alters the word you use to ask for the points, default `score`.
-`HUBOT_PLUSPLUS_REASONS` - the text used for the word "reasons" when hubot lists the top-N report, default `raisins`.
+`HUBOT_PLUSPLUS_REASONS` - the text used for the word "reasons" when hubot lists the top-N report, default `reasons`.
 

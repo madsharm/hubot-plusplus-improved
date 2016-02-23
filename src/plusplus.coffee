@@ -39,7 +39,7 @@ ScoreKeeper = require('./scorekeeper')
 module.exports = (robot) ->
   scoreKeeper = new ScoreKeeper(robot)
   scoreKeyword   = process.env.HUBOT_PLUSPLUS_KEYWORD or 'score'
-  reasonsKeyword = process.env.HUBOT_PLUSPLUS_REASONS or 'raisins'
+  reasonsKeyword = process.env.HUBOT_PLUSPLUS_REASONS or 'reasons'
   reasonConjunctions = process.env.HUBOT_PLUSPLUS_CONJUNCTIONS or 'for|because|cause|cuz|as'
 
   # sweet regex bro

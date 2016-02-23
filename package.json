@@ -1,5 +1,5 @@
 {
-  "name": "hubot-plusplus",
+  "name": "hubot-plusplus-improved",
   "version": "1.4.0",
   "description": "A hubot script for adding or removing points",
   "main": "index.coffee",
@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/ajacksified/hubot-plusplus.git"
+    "url": "git://github.com/jabbink/hubot-plusplus-improved.git"
   },
   "keywords": [
     "hubot",
@@ -16,10 +16,14 @@
     "plus",
     "karma"
   ],
-  "author": "Jack Lawson <https://github.com/ajacksified>",
+  "author": {
+    "name": "Jasper Abbink",
+    "email": "hubot-plusplus-improved-github@abb.ink",
+    "url": "https://github.com/jabbink/hubot-plusplus-improved"
+  },
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/ajacksified/hubot-plusplus/issues"
+    "url": "https://github.com/jabbink/hubot-plusplus-improved/issues"
   },
   "dependencies": {
     "coffee-script": "~1.6",
@@ -31,5 +35,8 @@
     "chai": "*",
     "sinon-chai": "*",
     "sinon": "*"
-  }
+  },
+  "contributors": [
+    "Jack Lawson <https://github.com/ajacksified>"
+  ]
 }
