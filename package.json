@@ -2,9 +2,9 @@
   "name": "hubot-plusplus-improved",
   "version": "1.4.0",
   "description": "A hubot script for adding or removing points",
-  "main": "index.coffee",
+  "main": "index.js",
   "scripts": {
-    "test": "mocha --compilers coffee:coffee-script --recursive ./test"
+    "test": "mocha --compilers --recursive ./test"
   },
   "repository": {
     "type": "git",
@@ -26,7 +26,6 @@
     "url": "https://github.com/jabbink/hubot-plusplus-improved/issues"
   },
   "dependencies": {
-    "coffee-script": "~1.6",
     "underscore": ">= 1.0",
     "clark": "0.0.6"
   },
