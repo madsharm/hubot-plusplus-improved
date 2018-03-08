@@ -1,11 +1,3 @@
-/*
- * decaffeinate suggestions:
- * DS101: Remove unnecessary use of Array.from
- * DS102: Remove unnecessary code created because of implicit returns
- * DS202: Simplify dynamic range loops
- * DS207: Consider shorter variations of null checks
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
 // Description:
 //   Give or take away points. Keeps track and even prints out graphs.
 //
@@ -42,7 +34,7 @@
 const _ = require('underscore');
 const clark = require('clark');
 const querystring = require('querystring');
-const ScoreKeeper = require('./scorekeeper');
+const ScoreKeeper = require('./scorekeeper.js');
 
 module.exports = function(robot) {
   const scoreKeeper = new ScoreKeeper(robot);
