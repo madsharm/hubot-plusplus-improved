@@ -4,7 +4,7 @@
   "description": "A hubot script for adding or removing points",
   "main": "index.js",
   "scripts": {
-    "test": "mocha --compilers --recursive ./test"
+    "test": "mocha test/*"
   },
   "repository": {
     "type": "git",
