@@ -211,16 +211,16 @@ module.exports = function(robot) {
 
     name = helper.cleanName(name);
 
-    const isAdmin = (this.robot.auth != null ? this.robot.auth.hasRole(user, 'plusplus-admin') : undefined) || (this.robot.auth != null ? this.robot.auth.hasRole(user, 'admin') : undefined);
+    const isAdmin = (this.robot.auth ? this.robot.auth.hasRole(user, 'plusplus-admin') : undefined) || (this.robot.auth ? this.robot.auth.hasRole(user, 'admin') : undefined);
 
-    if (this.robot.auth == null) {
+    if (!this.robot.auth || !isAdmin) {
       msg.reply("Sorry, you don't have authorization to do that.");      
       return;
     } else if (isAdmin) {
       erased = scoreKeeper.erase(name, from, room, reason);
     }
 
-    if (erased != null) {
+    if (erased) {
       const message = (reason != null) ? `Erased the following reason from ${name}: ${reason}` : `Erased points for ${name}`;
       msg.send(message);
     }

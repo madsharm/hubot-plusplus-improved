@@ -13,7 +13,7 @@ const eol = `$`;
  * botName score for user1
  */
 function createAskForScoreRegExp() {
-  return new RegExp(`(?:${scoreKeyword})\\s(for\\s)?(.*)`, `i`);
+  return new RegExp(`(?:${scoreKeyword})\\s(\\w+\\s)?${votedObject}`, `i`);
 }
 
 /**
@@ -24,7 +24,7 @@ function createEraseUserScoreRegExp() {
   // from beginning of line
   const eraseClause = `(?:erase)`;
 
-  return new RegExp(`${eraseClause}${votedObject}${reasonForVote}${eol}`, `i`);
+  return new RegExp(`${eraseClause}${allowSpaceAfterObject}${votedObject}${allowSpaceAfterObject}${reasonForVote}${eol}`, `i`);
 }
 
 /**
