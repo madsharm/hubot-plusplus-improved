@@ -82,6 +82,11 @@ module.exports = function(robot) {
       [ newScore, reasonScore ] = scoreKeeper.subtract(name, from, room, reason);
     }
     
+    if (newScore === null && reasonScore === null) {
+      msg.reply("please slow your roll.");
+      return;
+    }
+
     const message = getMessageForNewScore(newScore, name, operator, reason, reasonScore);
 
     if (message) {
@@ -139,7 +144,7 @@ module.exports = function(robot) {
       .filter((message) => !!message);
     }
 
-    
+
     if (messages.length) {
       robot.logger.debug(`These are the messages \n ${messages.join('\n')}`);
       msg.send(messages.join('\n'));
@@ -152,6 +157,9 @@ module.exports = function(robot) {
           from:      from
         })
       );
+    } else {
+      msg.reply("please slow your roll.");
+      return;
     }
   }
 
