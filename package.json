@@ -1,14 +1,14 @@
 {
   "name": "hubot-plusplus-improved",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "A hubot script for adding or removing points",
   "main": "index.js",
   "scripts": {
-    "test": "mocha --compilers --recursive ./test"
+    "test": "mocha --watch **/*.test.*"
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/jabbink/hubot-plusplus-improved.git"
+    "url": "git://github.com/Mutmatt/hubot-plusplus-improved.git"
   },
   "keywords": [
     "hubot",
@@ -17,25 +17,24 @@
     "karma"
   ],
   "author": {
-    "name": "Jasper Abbink",
-    "email": "hubot-plusplus-improved-github@abb.ink",
-    "url": "https://github.com/jabbink/hubot-plusplus-improved"
+    "name": "Matt Erickson",
+    "email": "hubot@matterickson.me",
+    "url": "https://github.com/Mutmatt/hubot-plusplus-improved"
   },
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/jabbink/hubot-plusplus-improved/issues"
+    "url": "https://github.com/Mutmatt/hubot-plusplus-improved/issues"
   },
   "dependencies": {
-    "underscore": ">= 1.0",
-    "clark": "0.0.6"
+    "clark": "^0.0.6",
+    "underscore": "^1.9.1"
   },
   "devDependencies": {
-    "mocha": "*",
-    "chai": "*",
-    "sinon-chai": "*",
-    "sinon": "*"
+    "mocha": "^6.2.0",
+    "mocha-each": "^2.0.1",
+    "chai": "^4.2.0",
+    "sinon-chai": "^3.3.0",
+    "sinon": "^7.4.1"
   },
-  "contributors": [
-    "Jack Lawson <https://github.com/ajacksified>"
-  ]
+  "contributors": []
 }
