@@ -39,8 +39,10 @@ const _ = require('underscore');
 // Author:
 //   auth0
 module.exports = function(robot) {
-  const scoreKeeper = new ScoreKeeper(robot);
+  const mongoUri = process.env.MONGODB_URI || process.env.MONGODB_URL || process.env.MONGOLAB_URI || process.env.MONGOHQ_URL || 'mongodb://localhost/plusPlus';
   const reasonsKeyword = process.env.HUBOT_PLUSPLUS_REASONS || 'reasons';
+  const scoreKeeper = new ScoreKeeper(robot, mongoUri);
+  scoreKeeper.init();
 
   const upOrDownVoteRegexp = helper.createUpDownVoteRegExp();
   const askForScoreRegexp = helper.createAskForScoreRegExp();
@@ -64,7 +66,7 @@ module.exports = function(robot) {
   /**
    * Functions for responding to commands
    */
-  function upOrDownVote(msg) {
+  async function upOrDownVote(msg) {
     let [ fullMatch, name, operator, reason ] = msg.match;
     const room = msg.message.room
     name = helper.cleanName(name).replace(msg.message._robot_name, '');
@@ -77,9 +79,10 @@ module.exports = function(robot) {
     
     let newScore, reasonScore;
     if (operator === '++') {
-      [ newScore, reasonScore ] = scoreKeeper.add(name, from, room, reason);
+      robot.logger.debug(`add score for ${name}, ${from}`);
+      [ newScore, reasonScore ] = await scoreKeeper.add(name, from, room, reason);
     } else if (operator === '--') {
-      [ newScore, reasonScore ] = scoreKeeper.subtract(name, from, room, reason);
+      [ newScore, reasonScore ] = await scoreKeeper.subtract(name, from, room, reason);
     }
     
     if (newScore === null && reasonScore === null) {
@@ -101,7 +104,7 @@ module.exports = function(robot) {
     }
   }
 
-  function multipleUsersVote(msg) {
+  async function multipleUsersVote(msg) {
     let [ fullMatch, names, dummy, operator, reason ] = msg.match;
     if (!names) {
       return;
@@ -129,20 +132,22 @@ module.exports = function(robot) {
     if (cleanNames.length === 1) return;
 
     let messages;
+    let results;
     if (operator === '++') {
-      messages = cleanNames.map((name) => {
-        [ newScore, reasonScore ] = scoreKeeper.add(name, from, room, reason);
+      results = cleanNames.map(async (name) => {
+        [ newScore, reasonScore ] = await scoreKeeper.add(name, from, room, reason);
         robot.logger.debug(`clean names map [${name}]: ${newScore}, the reason ${reasonScore}`);
         return getMessageForNewScore(newScore, name, operator, reason, reasonScore);
-      })
-      .filter((message) => !!message);
+      });
+      
     } else if (operator === '--') {
-      messages = cleanNames.map((name) => {
-        [ newScore, reasonScore ] = scoreKeeper.subtract(name, from, room, reason);
+      results = cleanNames.map(async (name) => {
+        [ newScore, reasonScore ] = await scoreKeeper.subtract(name, from, room, reason);
         return getMessageForNewScore(newScore, name, operator, reason, reasonScore);
       })
-      .filter((message) => !!message);
     }
+    messages = await Promise.all(results);
+    messages = messages.filter((message) => !!message);
 
 
     if (messages.length) {
@@ -163,11 +168,11 @@ module.exports = function(robot) {
     }
   }
 
-  function respondWithScore(msg) {
+  async function respondWithScore(msg) {
     const name = helper.cleanName(msg.match[2]);
 
-    const score = scoreKeeper.scoreForUser(name);
-    const reasons = scoreKeeper.reasonsForUser(name);
+    const score = await scoreKeeper.scoreForUser(name);
+    const reasons = await scoreKeeper.reasonsForUser(name);
 
     if (typeof reasons == 'object' && Object.keys(reasons).length > 0) {
       const reasonMap = _.reduce(reasons, (memo, val, key) => memo += `\n${key}: ${val} points`,``);
@@ -186,11 +191,11 @@ module.exports = function(robot) {
     });
   }
 
-  function respondWithLeaderLoserBoard(msg) {
+  async function respondWithLeaderLoserBoard(msg) {
     const amount = parseInt(msg.match[2]) || 10;
     const topOrBottom = msg.match[1].trim();
     
-    const tops = scoreKeeper[topOrBottom](amount);
+    const tops = await scoreKeeper[topOrBottom](amount);
     
     let message = [];
     if (tops.length > 0) {
@@ -209,7 +214,7 @@ module.exports = function(robot) {
     return msg.send(message.join("\n"));
   }
 
-  function eraseUserScore(msg) {
+  async function eraseUserScore(msg) {
     let erased;
     let [__, name, reason] = Array.from(msg.match);
     const from = msg.message.user.name.toLowerCase();
@@ -225,7 +230,7 @@ module.exports = function(robot) {
       msg.reply("Sorry, you don't have authorization to do that.");      
       return;
     } else if (isAdmin) {
-      erased = scoreKeeper.erase(name, from, room, reason);
+      erased = await scoreKeeper.erase(name, from, room, reason);
     }
 
     if (erased) {
