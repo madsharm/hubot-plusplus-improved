@@ -22,23 +22,23 @@
 //   hubot top <amount> - Display the top scoring <amount>
 //   hubot bottom <amount> - Display the bottom scoring <amount>
 //   hubot erase <name> [<reason>] - Remove the score for a name (for a reason)
-//   how much are hubot points worth (how much point) - Shows how much hubot points are worth in real time
+//   how much are hubot points worth (how much point) - Shows how much hubot points are worth
 //
 //
 // Author:
 
-const clark = require("clark");
-const ScoreKeeper = require('./scorekeeper');
-const helper = require('./helpers');
+const clark = require('clark');
 const request = require('request');
 const _ = require('underscore');
+const ScoreKeeper = require('./scorekeeper');
+const helper = require('./helpers');
 
 // Description:
 //   Praise users or things.
 //
 // Author:
 //   auth0
-module.exports = function(robot) {
+module.exports = function plusPlus(robot) {
   const mongoUri = process.env.MONGODB_URI || process.env.MONGODB_URL || process.env.MONGOLAB_URI || process.env.MONGOHQ_URL || 'mongodb://localhost/plusPlus';
   const reasonsKeyword = process.env.HUBOT_PLUSPLUS_REASONS || 'reasons';
   const scoreKeeper = new ScoreKeeper(robot, mongoUri);
@@ -49,7 +49,8 @@ module.exports = function(robot) {
   const multiUserVoteRegExp = helper.createMultiUserVoteRegExp();
   const topOrBottomRegExp = helper.createTopBottomRegExp();
   const eraseScoreRegExp = helper.createEraseUserScoreRegExp();
-  
+
+  /* eslint-disable */
   // listen to everything
   robot.hear(upOrDownVoteRegexp, upOrDownVote);
   robot.hear(/^[Hh]ow\s*much\s*.*point.*$/, tellHowMuchPointsAreWorth);
@@ -58,70 +59,70 @@ module.exports = function(robot) {
   // listen for bot tag/ping
   robot.respond(askForScoreRegexp, respondWithScore);
   robot.respond(topOrBottomRegExp, respondWithLeaderLoserBoard);
-  
-  // admin
-  robot.respond(eraseScoreRegExp , eraseUserScore);
 
+  // admin
+  robot.respond(eraseScoreRegExp, eraseUserScore);
+  /* eslint-enable */
 
   /**
    * Functions for responding to commands
    */
   async function upOrDownVote(msg) {
-    let [ fullMatch, name, operator, reason ] = msg.match;
-    const room = msg.message.room
+    // eslint-disable-next-line
+    let [fullMatch, name, operator, reason] = msg.match;
+    const { room } = msg.message;
+    // eslint-disable-next-line
     name = helper.cleanName(name).replace(msg.message._robot_name, '');
-    reason = reason != null ? reason.trim().toLowerCase() : undefined;
-    from = msg.message.user.name.toLowerCase();
-    
-    if (name === 'heat' && operator == '++') {
+    reason = helper.cleanAndEncodeReason(reason);
+    const from = msg.message.user.name.toLowerCase();
+
+    if (name === 'heat' && operator === '++') {
       msg.send('podríamos subir un gradin la calefa???');
     }
-    
-    let newScore, reasonScore;
+
+    let newScore; let
+      reasonScore;
     if (operator === '++') {
       robot.logger.debug(`add score for ${name}, ${from}`);
-      [ newScore, reasonScore ] = await scoreKeeper.add(name, from, room, reason);
+      [newScore, reasonScore] = await scoreKeeper.add(name, from, room, reason);
     } else if (operator === '--') {
-      [ newScore, reasonScore ] = await scoreKeeper.subtract(name, from, room, reason);
+      [newScore, reasonScore] = await scoreKeeper.subtract(name, from, room, reason);
     }
-    
+
     if (newScore === null && reasonScore === null) {
-      msg.reply("please slow your roll.");
+      msg.reply('please slow your roll.');
       return;
     }
 
-    const message = getMessageForNewScore(newScore, name, operator, reason, reasonScore);
+    const message = helper.getMessageForNewScore(newScore, name, operator, reason, reasonScore);
 
     if (message) {
       msg.send(message);
-      robot.emit("plus-one", {
-        name:      name,
+      robot.emit('plus-one', {
+        name,
         direction: operator,
-        room:      room,
-        reason:    reason,
-        from:      from
+        room,
+        reason,
+        from,
       });
     }
   }
 
   async function multipleUsersVote(msg) {
-    let [ fullMatch, names, dummy, operator, reason ] = msg.match;
+    // eslint-disable-next-line
+    const [fullMatch, names, dummy, operator, reason] = msg.match;
     if (!names) {
       return;
     }
 
-
     const namesArray = names.trim().toLowerCase().split(',');
     const from = msg.message.user.name.toLowerCase();
-    const room = msg.message.room;
-    reason = reason != null ? reason.trim().toLowerCase() : undefined;
+    const { room } = msg.message;
+    const encodedReason = helper.cleanAndEncodeReason(reason);
 
     const cleanNames = namesArray
       // Parse names
-      .map((name) => {
-        name = helper.cleanName(name);
-        return name.match(new RegExp(helper.votedObject, 'i'))[1];
-      })
+      .map((name) => helper.cleanName(name).match(new RegExp(helper.votedObject, 'i'))[1])
       // Remove empty ones: {,,,}++
       .filter((name) => !!name.length)
       // Remove duplicates: {user1,user1}++
@@ -135,36 +136,31 @@ module.exports = function(robot) {
     let results;
     if (operator === '++') {
       results = cleanNames.map(async (name) => {
-        [ newScore, reasonScore ] = await scoreKeeper.add(name, from, room, reason);
+        const [newScore, reasonScore] = await scoreKeeper.add(name, from, room, encodedReason);
         robot.logger.debug(`clean names map [${name}]: ${newScore}, the reason ${reasonScore}`);
-        return getMessageForNewScore(newScore, name, operator, reason, reasonScore);
+        return helper.getMessageForNewScore(newScore, name, operator, encodedReason, reasonScore);
       });
-      
     } else if (operator === '--') {
       results = cleanNames.map(async (name) => {
-        [ newScore, reasonScore ] = await scoreKeeper.subtract(name, from, room, reason);
-        return getMessageForNewScore(newScore, name, operator, reason, reasonScore);
-      })
+        const [newScore, reasonScore] = await scoreKeeper.subtract(name, from, room, encodedReason);
+        return helper.getMessageForNewScore(newScore, name, operator, encodedReason, reasonScore);
+      });
     }
     messages = await Promise.all(results);
     messages = messages.filter((message) => !!message);
 
-
     if (messages.length) {
       robot.logger.debug(`These are the messages \n ${messages.join('\n')}`);
       msg.send(messages.join('\n'));
-      cleanNames.map((name) => 
-        robot.emit("plus-one", {
-          name:      name,
-          direction: operator,
-          room:      room,
-          reason:    reason,
-          from:      from
-        })
-      );
+      cleanNames.map((name) => robot.emit('plus-one', {
+        name,
+        direction: operator,
+        room,
+        encodedReason,
+        from,
+      }));
     } else {
-      msg.reply("please slow your roll.");
-      return;
+      msg.reply('please slow your roll.');
     }
   }
 
@@ -173,100 +169,78 @@ module.exports = function(robot) {
 
     const score = await scoreKeeper.scoreForUser(name);
     const reasons = await scoreKeeper.reasonsForUser(name);
-
-    if (typeof reasons == 'object' && Object.keys(reasons).length > 0) {
-      const reasonMap = _.reduce(reasons, (memo, val, key) => memo += `\n${key}: ${val} points`,``);
-      return msg.send(`${name} has ${score} points. Here are some ${reasonsKeyword}: ${reasonMap}`);
-    } else {
-      return msg.send(`${name} has ${score} points`);
+    
+    if (typeof reasons === 'object' && Object.keys(reasons).length > 0) {
+      const reasonMap = _.reduce(reasons, (memo, val, key) => {
+        const decodedKey = helper.decodeReason(key);
+        const pointStr = val > 1 ? 'points' : 'point';
+        // eslint-disable-next-line
+        memo += `\n_${decodedKey}_: ${val} ${pointStr}`;
+        return memo;
+      }, '');
+      return msg.send(`${name} has ${score} points.\n\n:star: Here are some ${reasonsKeyword} :star:${reasonMap}`);
     }
+    return msg.send(`${name} has ${score} points`);
   }
 
   function tellHowMuchPointsAreWorth(msg) {
     request.get('https://api.coindesk.com/v1/bpi/currentprice/ARS.json', { json: true }, (err, res, body) => {
-      var bitcoin = body.bpi.USD.rate_float;
-      var ars = body.bpi.ARS.rate_float;
-      var satoshi = bitcoin / 1e8;
+      const bitcoin = body.bpi.USD.rate_float;
+      const ars = body.bpi.ARS.rate_float;
+      const satoshi = bitcoin / 1e8;
+      // eslint-disable-next-line
       return msg.send(`A bitcoin is worth ${bitcoin} USD right now (${ars} ARS), a satoshi is about ${satoshi} and ${msg.message._robot_name} points are worth nothing!`);
     });
   }
 
   async function respondWithLeaderLoserBoard(msg) {
-    const amount = parseInt(msg.match[2]) || 10;
+    const amount = parseInt(msg.match[2], 10) || 10;
     const topOrBottom = msg.match[1].trim();
-    
+
     const tops = await scoreKeeper[topOrBottom](amount);
-    
-    let message = [];
+
+    const message = [];
     if (tops.length > 0) {
-      for (let i = 0, end = tops.length-1, asc = 0 <= end; asc ? i <= end : i >= end; asc ? i++ : i--) {
-        message.push(`${i+1}. ${tops[i].name} : ${tops[i].score}`);
+      // eslint-disable-next-line
+      for (let i = 0, end = tops.length - 1, asc = end >= 0; asc ? i <= end : i >= end; asc ? i++ : i--) {
+        message.push(`${i + 1}. ${tops[i].name} : ${tops[i].score}`);
       }
     } else {
-      message.push("No scores to keep track of yet!");
+      message.push('No scores to keep track of yet!');
     }
 
-    if(topOrBottom === "top") {
+    if (topOrBottom === 'top') {
       const graphSize = Math.min(tops.length, Math.min(amount, 20));
-      message.splice(0, 0, clark(_.first(_.pluck(tops, "score"), graphSize)));
+      message.splice(0, 0, clark(_.first(_.pluck(tops, 'score'), graphSize)));
     }
 
-    return msg.send(message.join("\n"));
+    return msg.send(message.join('\n'));
   }
 
   async function eraseUserScore(msg) {
     let erased;
+    // eslint-disable-next-line
     let [__, name, reason] = Array.from(msg.match);
     const from = msg.message.user.name.toLowerCase();
     const { user } = msg.envelope;
     const { room } = msg.message;
-    reason = reason != null ? reason.trim().toLowerCase() : undefined;
+    reason = helper.cleanAndEncodeReason(reason);
 
     name = helper.cleanName(name);
 
     const isAdmin = (this.robot.auth ? this.robot.auth.hasRole(user, 'plusplus-admin') : undefined) || (this.robot.auth ? this.robot.auth.hasRole(user, 'admin') : undefined);
 
     if (!this.robot.auth || !isAdmin) {
-      msg.reply("Sorry, you don't have authorization to do that.");      
+      msg.reply("Sorry, you don't have authorization to do that.");
       return;
-    } else if (isAdmin) {
+    } if (isAdmin) {
       erased = await scoreKeeper.erase(name, from, room, reason);
     }
 
     if (erased) {
-      const message = (reason != null) ? `Erased the following reason from ${name}: ${reason}` : `Erased points for ${name}`;
+      const decodedReason = helper.decodeReason(reason);
+      const message = (!decodedReason) ? `Erased the following reason from ${name}: ${decodedReason}` : `Erased points for ${name}`;
       msg.send(message);
     }
-  } 
-
-  /* ----- private helpers ----- */
-  function getMessageForNewScore(score, name, operator, reason, reasonScore) {
-    //if we got a score, then display all the things and fire off events!
-    if (typeof score !== undefined && score !== null) {
-      if (name === 'heat') {
-        const upOrDown = operator == '++' ? 'subir' : 'bajar';
-        return `podríamos ${upOrDown} un gradin la calefa???\nLa temperatura debería estar en ${score} ℃.`;
-      }
-
-
-      if (reason != null) {
-        if ((reasonScore === 1) || (reasonScore === -1)) {
-          if ((score === 1) || (score === -1)) {
-            return `${name} has ${score} point for ${reason}.`
-          } else {
-            return `${name} has ${score} points, ${reasonScore} of which is for ${reason}.`
-          }
-        } else {
-          return `${name} has ${score} points, ${reasonScore} of which are for ${reason}.`
-        }
-      } else {
-        if (score === 1) {
-          return `${name} has ${score} point`
-        } else {
-          return `${name} has ${score} points`;
-        }
-      }
-    }
-    return;
   }
 };

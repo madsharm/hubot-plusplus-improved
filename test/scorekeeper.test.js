@@ -8,44 +8,40 @@ const { expect } = chai;
 const ScoreKeeper = require('../src/scorekeeper.js');
 
 let robotStub = {};
-let defaultData = {
+const defaultData = {
   scores: [
-    {}
+    {},
   ],
   scoreLog: [
-    {}
-  ]
+    {},
+  ],
 };
 
 
-describe('ScoreKeeper', async () => {
+describe('ScoreKeeper', function() {
   let scoreKeeper;
-  before(async () => {
+  before(async function () {
     robotStub = {
       brain: {
         data: { },
         on() {},
         emit() {},
-        save() {}
+        save() {},
       },
       logger: {
-        debug() {}
-      }
+        debug() {},
+      },
     };
     const url = await mongoUnit.start();
     scoreKeeper = new ScoreKeeper(robotStub, url);
     return await scoreKeeper.init();
   });
 
-  beforeEach(async () => {
-    return await mongoUnit.load(defaultData);
-  });
+  beforeEach(async function () { return await mongoUnit.load(defaultData); });
 
-  afterEach(async () => {
-    return await mongoUnit.drop();
-  });
+  afterEach(async function () { return await mongoUnit.drop(); });
 
-  describe('adding', async () => {
+  describe('adding', () => {
     it('adds points to a user', async () => {
       const r = await scoreKeeper.add('to', 'from', 'room');
       expect(r[0]).to.equal(1);
@@ -69,7 +65,7 @@ describe('ScoreKeeper', async () => {
     });
   });
 
-  describe('subtracting', async () => {
+  describe('subtracting', () => {
     it('adds points to a user', async () => {
       const r = await scoreKeeper.subtract('to', 'from', 'room');
       expect(r[0]).to.equal(-1);
@@ -93,7 +89,7 @@ describe('ScoreKeeper', async () => {
     });
   });
 
-  describe('erasing', async () => {
+  describe('erasing', () => {
     it('erases a reason from a user', async () => {
       const p = await scoreKeeper.add('to', 'from', 'room', 'reason');
       expect(p).to.deep.equal([1, 1]);
@@ -107,13 +103,13 @@ describe('ScoreKeeper', async () => {
       const p = await scoreKeeper.add('to', 'from', 'room', 'reason');
       expect(p).to.deep.equal([1, 1]);
       const r = await scoreKeeper.erase('to', 'from', 'room');
-      expect(r).to.equal(true); 
+      expect(r).to.equal(true);
       const p2 = await scoreKeeper.scoreForUser('to');
       expect(p2).to.equal(0);
     });
   });
 
-  describe('scores', async () => {
+  describe('scores', () => {
     it('returns the score for a user', async () => {
       await scoreKeeper.add('to', 'from', 'room');
       const r = await scoreKeeper.scoreForUser('to');

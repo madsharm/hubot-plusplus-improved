@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "mocha --timeout 5000 **/*.test.* --exit",
-    "tdd": "mocha --watch **/*.test.*"
+    "tdd": "mocha --watch **/*.test.*",
+    "lint": "eslint src --fix"
   },
   "repository": {
     "type": "git",
@@ -29,10 +30,19 @@
   "dependencies": {
     "clark": "^0.0.6",
     "mongodb": "^3.3.0-beta2",
+    "request": "^2.88.0",
     "underscore": "^1.9.1"
   },
   "devDependencies": {
     "chai": "^4.2.0",
+    "eslint": "^6.1.0",
+    "eslint-config-airbnb-base": "^14.0.0",
+    "eslint-config-standard": "^13.0.1",
+    "eslint-plugin-import": "^2.18.2",
+    "eslint-plugin-mocha": "^6.0.0",
+    "eslint-plugin-node": "^9.1.0",
+    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-standard": "^4.0.0",
     "mocha": "^6.2.0",
     "mocha-each": "^2.0.1",
     "mongo-unit": "^1.4.4",
