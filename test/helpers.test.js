@@ -123,4 +123,32 @@ describe('Helpers', () => {
         expect(fullText.match(upVoteOrDownVoteRegExp)).to.deep.equal([firstMatch, name, operator, reason]);
       });
   });
+
+  // This method expects base64 encoded reasons but we are stubbing out the decode method
+  describe('getMessageForNewScore', () => {
+    before(() => {
+      const mockHelpers = sinon.stub(helpers, 'decodeReason');
+      mockHelpers.returnsArg(0);
+    });
+    forEach([
+      [undefined, undefined, undefined, undefined, undefined, ''],
+      [1, 'matt', undefined, undefined, undefined, 'matt has 1 point.'],
+      [2, 'matt', undefined, undefined, undefined, 'matt has 2 points.'],
+      [100, 'matt', undefined, undefined, undefined, ':100: matt has 100 points :100:'],
+      [1000, 'matt', undefined, undefined, undefined, ':1000: matt has 1000 points :1000:'],
+      [300, 'matt', undefined, undefined, undefined, ':300: matt has 300 points :300:'],
+      [45, 'matt', '++', 'winning', 1, 'matt has 45 points, 1 of which is for winning.'],
+      [1, 'matt', '++', 'cool runnings!', 1, 'matt has 1 point for cool runnings!.'],
+      [1, 'matt', '++', 'cool runnings!', 99, 'matt has 1 point, 99 of which are for cool runnings!.'],// this doesn't make sense but the message doesn't care
+      [145, 'matt', '++', 'cool runnings!', 99, 'matt has 145 points, 99 of which are for cool runnings!.'],
+      [200, 'matt', '++', 'cool runnings!', 99, ':200: matt has 200 points :200:, 99 of which are for cool runnings!.'],
+      [28, 'heat', '++', undefined, 0, `podríamos subir un gradin la calefa???\nLa temperatura debería estar en 28 ℃.`],
+      [28, 'heat', '--', undefined, 0, `podríamos bajar un gradin la calefa???\nLa temperatura debería estar en 28 ℃.`],
+    ])
+    .it('should take the score %j, name %j, operator %j, reason %j, reason score %j and print %j',
+      (score, name, messageOperator, reason, reasonScore, expectedMessage) => {
+        const message = helpers.getMessageForNewScore(score, name, messageOperator, reason, reasonScore);
+        expect(message).to.equal(expectedMessage);
+    });
+  });
 });

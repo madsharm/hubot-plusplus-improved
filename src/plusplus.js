@@ -40,6 +40,7 @@ const helper = require('./helpers');
 //   auth0
 module.exports = function plusPlus(robot) {
   const mongoUri = process.env.MONGODB_URI || process.env.MONGODB_URL || process.env.MONGOLAB_URI || process.env.MONGOHQ_URL || 'mongodb://localhost/plusPlus';
+  const spamMessage = process.env.HUBOT_SPAM_MESSAGE || 'please slow your roll.';
   const reasonsKeyword = process.env.HUBOT_PLUSPLUS_REASONS || 'reasons';
   const scoreKeeper = new ScoreKeeper(robot, mongoUri);
   scoreKeeper.init();
@@ -90,7 +91,7 @@ module.exports = function plusPlus(robot) {
     }
 
     if (newScore === null && reasonScore === null) {
-      msg.reply('please slow your roll.');
+      msg.reply(spamMessage);
       return;
     }
 

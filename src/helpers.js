@@ -101,21 +101,29 @@ function getMessageForNewScore(score, name, messageOperator, reason, reasonScore
       const upOrDown = messageOperator === '++' ? 'subir' : 'bajar';
       return `podríamos ${upOrDown} un gradin la calefa???\nLa temperatura debería estar en ${score} ℃.`;
     }
+    let scoreStr = `${name} has ${score} points`, reasonStr = `.`;
+    if (score === 1) {
+      scoreStr = `${name} has ${score} point`;
+    }
+    if (score % 100 === 0) {
+      const extraFlare = `:${(score / 100 * 100).toString()}:`;
+      scoreStr = `${extraFlare} ${scoreStr} ${extraFlare}`;
+      reasonStr = ``;
+    }
 
     if (reason) {
       const decodedReason = this.decodeReason(reason);
-      if ((reasonScore === 1) || (reasonScore === -1)) {
-        if ((score === 1) || (score === -1)) {
-          return `${name} has ${score} point for ${decodedReason}.`;
+      if (reasonScore === 1 || reasonScore === -1) {
+        if (score === 1 || score === -1) {
+          reasonStr = ` for ${decodedReason}.`;
+        } else {
+          reasonStr = `, ${reasonScore} of which is for ${decodedReason}.`;
         }
-        return `${name} has ${score} points, ${reasonScore} of which is for ${decodedReason}.`;
+      } else {
+        reasonStr = `, ${reasonScore} of which are for ${decodedReason}.`;
       }
-      return `${name} has ${score} points, ${reasonScore} of which are for ${decodedReason}.`;
     }
-    if (score === 1) {
-      return `${name} has ${score} point`;
-    }
-    return `${name} has ${score} points`;
+    return `${scoreStr}${reasonStr}`;
   }
   return '';
 }
