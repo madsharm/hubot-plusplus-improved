@@ -15,6 +15,8 @@ describe('Helpers', () => {
       ['hello @derp', 'hello @derp'],
       ['what', 'what'],
       ['', ''],
+      ['name.hyphe-nated', 'name.hyphe-nated'],
+      ['dot.name', 'dot.name']
     ]).it('should clean %j of the @ sign and be %j if @ is the first char', (fullName, cleaned) => {
       expect(helpers.cleanName(fullName)).to.equal(cleaned);
     });
@@ -29,7 +31,7 @@ describe('Helpers', () => {
       ['', undefined],
       [undefined, undefined],
     ]).it('should clean the reason %j and base 64 encode it to %j', (reason, encoded) => {
-      expect(helpers.cleanAndEncodeReason(reason)).to.equal(encoded);
+      expect(helpers.cleanAndEncode(reason)).to.equal(encoded);
     });
   });
 
@@ -42,7 +44,7 @@ describe('Helpers', () => {
       [undefined, undefined],
       [undefined, undefined, undefined],
     ]).it('should decode the reason %j from base 64 encode to %j', (encoded, cleaned) => {
-      expect(helpers.decodeReason(encoded)).to.equal(cleaned);
+      expect(helpers.decode(encoded)).to.equal(cleaned);
     });
   });
 
@@ -53,6 +55,7 @@ describe('Helpers', () => {
       ['score with matt', 'with ', 'matt'],
       ['scores for matt', 'for ', 'matt'],
       ['karma phil', undefined, 'phil'],
+      ['score such.a.complex-name-hyphens', undefined, 'such.a.complex-name-hyphens']
     ])
       .it('should match the search %j', (searchQuery, middleMatch, name) => {
         const scoreMatchRegExp = helpers.createAskForScoreRegExp();
@@ -114,8 +117,10 @@ describe('Helpers', () => {
       ['you are the best matt--', 'matt--', 'matt', '--', undefined],
       ['\'you are the best matt\'--', '\'you are the best matt\'--', '\'you are the best matt\'', '--', undefined],
       ['you are the best matt++ cuz you started #matt-s', 'matt++ cuz you started #matt-s', 'matt', '++', 'you started #matt-s'],
+      ['you are the best matt++ cuz you started #matt-s', 'matt++ cuz you started #matt-s', 'matt', '++', 'you started #matt-s'],
+      ['such.a.complex-name-hyphens++', 'such.a.complex-name-hyphens++', 'such.a.complex-name-hyphens', '++', undefined]
     ])
-      .it('should match \'%j\'', (fullText, firstMatch, name, operator, reason) => {
+      .it('should hear name [%3$s] up/down [%4$s] with reason [%5$s]', (fullText, firstMatch, name, operator, reason) => {
         const upVoteOrDownVoteRegExp = helpers.createUpDownVoteRegExp();
         expect(upVoteOrDownVoteRegExp).to.be.a('RegExp');
         expect(fullText.match(upVoteOrDownVoteRegExp)).to.be.an('array');
@@ -127,7 +132,7 @@ describe('Helpers', () => {
   // This method expects base64 encoded reasons but we are stubbing out the decode method
   describe('getMessageForNewScore', () => {
     before(() => {
-      const mockHelpers = sinon.stub(helpers, 'decodeReason');
+      const mockHelpers = sinon.stub(helpers, 'decode');
       mockHelpers.returnsArg(0);
     });
     forEach([

@@ -1,12 +1,43 @@
 const { MongoClient } = require('mongodb');
+const helpers = require('./helpers');
 
+/*
+ * scores: []
+ * {
+ *   name: string
+ *   score: int
+ *   reasons: ReasonsObject
+ *   pointsGiven: PointsGivenObject
+ * }
+ * 
+ * ReasonsObject:
+ * {
+ *   [reason]: int
+ * }
+ * 
+ * PointsGivenObject:
+ * {
+ *   [to]: int
+ * }
+ */
 const scoresDocumentName = 'scores';
+
+/*
+ * scoreLog: []
+ * {
+ *   from: string
+ *   to: string
+ *   date: datetime
+ * }
+ */
 const logDocumentName = 'scoreLog';
 
 class ScoreKeeper {
-  constructor(robot, uri) {
+  constructor(robot, uri, peerFeedbackUrl, furtherFeedbackScore = 10) {
     this.uri = uri;
     this.robot = robot;
+    this.peerFeedbackUrl = peerFeedbackUrl;
+    this.furtherFeedbackScore = parseInt(furtherFeedbackScore, 10);
   }
 
   async init() {
@@ -32,6 +63,7 @@ class ScoreKeeper {
           name: user,
           score: 0,
           reasons: {},
+          pointsGiven: {}
         },
       },
       {
@@ -53,16 +85,16 @@ class ScoreKeeper {
       );
     const updatedUser = result.value;
 
-    this.saveScoreLog(user.name, from, room, reason);
+    this.saveSpamLog(user.name, from, room, reason);
 
     this.robot.logger.debug(`Saving user original: [${user.name}: ${user.score} ${user.reasons[reason] || 'none'}], new [${updatedUser.name}: ${updatedUser.score} ${updatedUser.reasons[reason] || 'none'}]`);
 
     return [updatedUser.score, updatedUser.reasons[reason] || 'none'];
   }
 
-  async add(user, from, room, reason) {
-    const dbUser = await this.getUser(user);
-    if (await this.validate(dbUser, from)) {
+  async add(msg, user, from, room, reason) {
+    const toUser = await this.getUser(user);
+    if (await this.validate(toUser, from)) {
       let incScoreObj = { score: 1 };
       if (reason) {
         incScoreObj = {
@@ -70,15 +102,16 @@ class ScoreKeeper {
           [`reasons.${reason}`]: 1,
         };
       }
-
-      return this.saveUser(dbUser, from, room, reason, incScoreObj);
+      
+      await this.savePointsGiven(msg, from, toUser.name, 1);
+      return this.saveUser(toUser, from, room, reason, incScoreObj);
     }
     return [null, null];
   }
 
-  async subtract(user, from, room, reason) {
-    const dbUser = await this.getUser(user);
-    if (await this.validate(dbUser, from)) {
+  async subtract(msg, user, from, room, reason) {
+    const toUser = await this.getUser(user);
+    if (await this.validate(toUser, from)) {
       let decScoreObj = { score: -1 };
       if (reason) {
         decScoreObj = {
@@ -87,7 +120,9 @@ class ScoreKeeper {
         };
       }
 
-      return this.saveUser(dbUser, from, room, reason, decScoreObj);
+      
+      await this.savePointsGiven(msg, from, toUser.name, -1);
+      return this.saveUser(toUser, from, room, reason, decScoreObj);
     }
     return [null, null];
   }
@@ -117,13 +152,31 @@ class ScoreKeeper {
   }
 
   // eslint-disable-next-line
-  async saveScoreLog(user, from, room, reason) {
+  async saveSpamLog(user, from) {
     const db = await this.getDb();
     db.collection(logDocumentName).insertOne({
       from,
       to: user,
       date: new Date(),
     });
+  }
+
+  async savePointsGiven(msg, from, to, score) {
+    const db = await this.getDb();
+    const cleanName = helpers.cleanAndEncode(to);
+    
+    const incObject = { [`pointsGiven.${cleanName}`]: score };
+    const result = await db.collection(scoresDocumentName)
+      .findOneAndUpdate(
+        { name: from },
+        { $inc: incObject },
+        { returnOriginal: false, upsert: true },
+      );
+    const updatedUser = result.value;
+    if (updatedUser.pointsGiven[cleanName] % 10 === 0 && score === 1) {
+      msg.reply(`Looks like you've given ${to} quite a few points, maybe you should look at submitting a ${this.peerFeedbackUrl}`)
+    }
+    return;
   }
 
   // eslint-disable-next-line

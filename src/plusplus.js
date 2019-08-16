@@ -25,7 +25,7 @@
 //   how much are hubot points worth (how much point) - Shows how much hubot points are worth
 //
 //
-// Author:
+// Author: Mutmatt
 
 const clark = require('clark');
 const request = require('request');
@@ -33,16 +33,14 @@ const _ = require('underscore');
 const ScoreKeeper = require('./scorekeeper');
 const helper = require('./helpers');
 
-// Description:
-//   Praise users or things.
-//
-// Author:
-//   auth0
 module.exports = function plusPlus(robot) {
   const mongoUri = process.env.MONGODB_URI || process.env.MONGODB_URL || process.env.MONGOLAB_URI || process.env.MONGOHQ_URL || 'mongodb://localhost/plusPlus';
-  const spamMessage = process.env.HUBOT_SPAM_MESSAGE || 'please slow your roll.';
+  const spamMessage = process.env.HUBOT_SPAM_MESSAGE || 'Please slow your roll.';
+  const futherFeedbackSuggestedScore = process.env.HUBOT_FURTHER_FEEDBACK_SCORE;
+  const companyName = process.env.HUBOT_COMPANY_NAME || 'company';
+  const peerFeedbackUrl = process.env.HUBOT_PEER_FEEDBACK_URL || `'Small Improvements' (${companyName}.small-improvements.com)`;
   const reasonsKeyword = process.env.HUBOT_PLUSPLUS_REASONS || 'reasons';
-  const scoreKeeper = new ScoreKeeper(robot, mongoUri);
+  const scoreKeeper = new ScoreKeeper(robot, mongoUri, peerFeedbackUrl, futherFeedbackSuggestedScore);
   scoreKeeper.init();
 
   const upOrDownVoteRegexp = helper.createUpDownVoteRegExp();
@@ -74,7 +72,7 @@ module.exports = function plusPlus(robot) {
     const { room } = msg.message;
     // eslint-disable-next-line
     name = helper.cleanName(name).replace(msg.message._robot_name, '');
-    reason = helper.cleanAndEncodeReason(reason);
+    reason = helper.cleanAndEncode(reason);
     const from = msg.message.user.name.toLowerCase();
 
     if (name === 'heat' && operator === '++') {
@@ -85,9 +83,9 @@ module.exports = function plusPlus(robot) {
       reasonScore;
     if (operator === '++') {
       robot.logger.debug(`add score for ${name}, ${from}`);
-      [newScore, reasonScore] = await scoreKeeper.add(name, from, room, reason);
+      [newScore, reasonScore] = await scoreKeeper.add(msg, name, from, room, reason);
     } else if (operator === '--') {
-      [newScore, reasonScore] = await scoreKeeper.subtract(name, from, room, reason);
+      [newScore, reasonScore] = await scoreKeeper.subtract(msg, name, from, room, reason);
     }
 
     if (newScore === null && reasonScore === null) {
@@ -119,7 +117,7 @@ module.exports = function plusPlus(robot) {
     const namesArray = names.trim().toLowerCase().split(',');
     const from = msg.message.user.name.toLowerCase();
     const { room } = msg.message;
-    const encodedReason = helper.cleanAndEncodeReason(reason);
+    const encodedReason = helper.cleanAndEncode(reason);
 
     const cleanNames = namesArray
       // Parse names
@@ -173,7 +171,7 @@ module.exports = function plusPlus(robot) {
     
     if (typeof reasons === 'object' && Object.keys(reasons).length > 0) {
       const reasonMap = _.reduce(reasons, (memo, val, key) => {
-        const decodedKey = helper.decodeReason(key);
+        const decodedKey = helper.decode(key);
         const pointStr = val > 1 ? 'points' : 'point';
         // eslint-disable-next-line
         memo += `\n_${decodedKey}_: ${val} ${pointStr}`;
@@ -225,7 +223,7 @@ module.exports = function plusPlus(robot) {
     const from = msg.message.user.name.toLowerCase();
     const { user } = msg.envelope;
     const { room } = msg.message;
-    reason = helper.cleanAndEncodeReason(reason);
+    reason = helper.cleanAndEncode(reason);
 
     name = helper.cleanName(name);
 
@@ -239,7 +237,7 @@ module.exports = function plusPlus(robot) {
     }
 
     if (erased) {
-      const decodedReason = helper.decodeReason(reason);
+      const decodedReason = helper.decode(reason);
       const message = (!decodedReason) ? `Erased the following reason from ${name}: ${decodedReason}` : `Erased points for ${name}`;
       msg.send(message);
     }

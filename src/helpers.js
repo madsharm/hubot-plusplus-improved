@@ -2,7 +2,7 @@
 const scoreKeyword = process.env.HUBOT_PLUSPLUS_KEYWORD || 'score|scores|karma';
 const reasonConjunctions = process.env.HUBOT_PLUSPLUS_CONJUNCTIONS || 'for|because|cause|cuz|as|porque';
 
-const votedObject = '((?:[\\w@.-:\u3040-\u30FF\uFF01-\uFF60\u4E00-\u9FA0]+(?<![+-]))|(?:[\'"][^\'"]*[\'"]))';
+const votedObject = '((?:[\\-\\w@.-:\u3040-\u30FF\uFF01-\uFF60\u4E00-\u9FA0]+(?<![+-]))|(?:[\'"][^\'"]*[\'"]))';
 // allow for spaces after the thing being upvoted (@user ++)
 const allowSpaceAfterObject = '\\s*';
 const operator = '(\\+\\+|--|—)';
@@ -22,24 +22,24 @@ function cleanName(name) {
   return name;
 }
 
-function cleanAndEncodeReason(reason) {
-  if (!reason) {
+function cleanAndEncode(str) {
+  if (!str) {
     return undefined;
   }
 
-  const trimmedReason = reason.trim().toLowerCase();
+  const trimmed = str.trim().toLowerCase();
   // eslint-disable-next-line
-  const buff = new Buffer.from(trimmedReason);
+  const buff = new Buffer.from(trimmed);
   const base64data = buff.toString('base64');
   return base64data;
 }
 
-function decodeReason(reason) {
-  if (!reason) {
+function decode(str) {
+  if (!str) {
     return undefined;
   }
   // eslint-disable-next-line
-  const buff = new Buffer.from(reason, 'base64');
+  const buff = new Buffer.from(str, 'base64');
   const text = buff.toString('ascii');
   return text;
 }
@@ -112,7 +112,7 @@ function getMessageForNewScore(score, name, messageOperator, reason, reasonScore
     }
 
     if (reason) {
-      const decodedReason = this.decodeReason(reason);
+      const decodedReason = this.decode(reason);
       if (reasonScore === 1 || reasonScore === -1) {
         if (score === 1 || score === -1) {
           reasonStr = ` for ${decodedReason}.`;
@@ -130,8 +130,8 @@ function getMessageForNewScore(score, name, messageOperator, reason, reasonScore
 
 const helpers = {
   cleanName,
-  cleanAndEncodeReason,
-  decodeReason,
+  cleanAndEncode,
+  decode,
   createAskForScoreRegExp,
   createEraseUserScoreRegExp,
   createMultiUserVoteRegExp,
