@@ -35,12 +35,12 @@ const helper = require('./helpers');
 
 module.exports = function plusPlus(robot) {
   const mongoUri = process.env.MONGODB_URI || process.env.MONGODB_URL || process.env.MONGOLAB_URI || process.env.MONGOHQ_URL || 'mongodb://localhost/plusPlus';
-  const spamMessage = process.env.HUBOT_SPAM_MESSAGE || 'Please slow your roll.';
+  const spamMessage = process.env.HUBOT_SPAM_MESSAGE || `Looks like you hit the spam filter. Please slow your role.`;
   const futherFeedbackSuggestedScore = process.env.HUBOT_FURTHER_FEEDBACK_SCORE;
   const companyName = process.env.HUBOT_COMPANY_NAME || 'company';
   const peerFeedbackUrl = process.env.HUBOT_PEER_FEEDBACK_URL || `'Small Improvements' (${companyName}.small-improvements.com)`;
   const reasonsKeyword = process.env.HUBOT_PLUSPLUS_REASONS || 'reasons';
-  const scoreKeeper = new ScoreKeeper(robot, mongoUri, peerFeedbackUrl, futherFeedbackSuggestedScore);
+  const scoreKeeper = new ScoreKeeper(robot, mongoUri, peerFeedbackUrl, spamMessage, futherFeedbackSuggestedScore);
   scoreKeeper.init();
 
   const upOrDownVoteRegexp = helper.createUpDownVoteRegExp();
@@ -71,9 +71,9 @@ module.exports = function plusPlus(robot) {
     let [fullMatch, name, operator, reason] = msg.match;
     const { room } = msg.message;
     // eslint-disable-next-line
-    name = helper.cleanName(name).replace(msg.message._robot_name, '');
+    name = helper.cleanName(name);
     reason = helper.cleanAndEncode(reason);
-    const from = msg.message.user.name.toLowerCase();
+    const from = msg.message.user;
 
     if (name === 'heat' && operator === '++') {
       msg.send('podríamos subir un gradin la calefa???');
@@ -82,14 +82,13 @@ module.exports = function plusPlus(robot) {
     let newScore; let
       reasonScore;
     if (operator === '++') {
-      robot.logger.debug(`add score for ${name}, ${from}`);
-      [newScore, reasonScore] = await scoreKeeper.add(msg, name, from, room, reason);
+      robot.logger.debug(`add score for ${name}, ${from.name}`);
+      [newScore, reasonScore] = await scoreKeeper.add(name, from, room, reason);
     } else if (operator === '--') {
-      [newScore, reasonScore] = await scoreKeeper.subtract(msg, name, from, room, reason);
+      [newScore, reasonScore] = await scoreKeeper.subtract(name, from, room, reason);
     }
 
     if (newScore === null && reasonScore === null) {
-      msg.reply(spamMessage);
       return;
     }
 
@@ -115,7 +114,7 @@ module.exports = function plusPlus(robot) {
     }
 
     const namesArray = names.trim().toLowerCase().split(',');
-    const from = msg.message.user.name.toLowerCase();
+    const from = msg.message.user;
     const { room } = msg.message;
     const encodedReason = helper.cleanAndEncode(reason);
 
@@ -220,7 +219,7 @@ module.exports = function plusPlus(robot) {
     let erased;
     // eslint-disable-next-line
     let [__, name, reason] = Array.from(msg.match);
-    const from = msg.message.user.name.toLowerCase();
+    const from = msg.message.user;
     const { user } = msg.envelope;
     const { room } = msg.message;
     reason = helper.cleanAndEncode(reason);
