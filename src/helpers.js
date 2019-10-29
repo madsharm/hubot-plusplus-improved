@@ -52,6 +52,15 @@ function createAskForScoreRegExp() {
 }
 
 /**
+ * clear this thread
+ * clean this thread
+ * clean thread
+*/
+function createClearThreadRegExp() {
+  return new RegExp(`(clear|clean) (this )?thread`, `i`);
+}
+
+/**
  * botName erase user1
  * botName erase user2 because they quit and i don't like quitters
  */
@@ -129,14 +138,15 @@ function getMessageForNewScore(score, name, messageOperator, reason, reasonScore
 }
 
 const helpers = {
-  cleanName,
   cleanAndEncode,
-  decode,
+  cleanName,
   createAskForScoreRegExp,
+  createClearThreadRegExp,
   createEraseUserScoreRegExp,
   createMultiUserVoteRegExp,
   createTopBottomRegExp,
   createUpDownVoteRegExp,
+  decode,
   getMessageForNewScore,
   votedObject,
 };

@@ -30,8 +30,11 @@
 const clark = require('clark');
 const request = require('request');
 const _ = require('underscore');
+const { WebClient } = require("@slack/client");
+
 const ScoreKeeper = require('./scorekeeper');
 const helper = require('./helpers');
+
 
 module.exports = function plusPlus(robot) {
   const mongoUri = process.env.MONGODB_URI || process.env.MONGODB_URL || process.env.MONGOLAB_URI || process.env.MONGOHQ_URL || 'mongodb://localhost/plusPlus';
@@ -41,6 +44,7 @@ module.exports = function plusPlus(robot) {
   const peerFeedbackUrl = process.env.HUBOT_PEER_FEEDBACK_URL || `'Small Improvements' (${companyName}.small-improvements.com)`;
   const reasonsKeyword = process.env.HUBOT_PLUSPLUS_REASONS || 'reasons';
   const scoreKeeper = new ScoreKeeper(robot, mongoUri, peerFeedbackUrl, spamMessage, futherFeedbackSuggestedScore);
+  const web = new WebClient(process.env.HUBOT_SLACK_TOKEN);
   scoreKeeper.init();
 
   const upOrDownVoteRegexp = helper.createUpDownVoteRegExp();
@@ -48,6 +52,7 @@ module.exports = function plusPlus(robot) {
   const multiUserVoteRegExp = helper.createMultiUserVoteRegExp();
   const topOrBottomRegExp = helper.createTopBottomRegExp();
   const eraseScoreRegExp = helper.createEraseUserScoreRegExp();
+  const clearThreadRegExp = helper.createClearThreadRegExp();
 
   /* eslint-disable */
   // listen to everything
@@ -57,6 +62,7 @@ module.exports = function plusPlus(robot) {
 
   // listen for bot tag/ping
   robot.respond(askForScoreRegexp, respondWithScore);
+  robot.respond(clearThreadRegExp, cleanThread);
   robot.respond(topOrBottomRegExp, respondWithLeaderLoserBoard);
 
   // admin
@@ -189,6 +195,38 @@ module.exports = function plusPlus(robot) {
       // eslint-disable-next-line
       return msg.send(`A bitcoin is worth ${bitcoin} USD right now (${ars} ARS), a satoshi is about ${satoshi} and ${msg.message._robot_name} points are worth nothing!`);
     });
+  }
+
+  async function cleanThread(msg) {
+    if (msg.message.thread_ts) {
+      const channel = msg.message.rawMessage.channel;
+      let webObject = web.channels;
+      switch (channel.substr(0, 1)) {
+        case 'G':
+            webObject = web.groups;
+          break;
+        case 'D':
+            webObject = web.im;
+          break;
+      }
+      console.log("see if we can find the messages from the api ");
+      const history = await webObject.history({
+        channel: channel
+      });
+      if (history) {
+        console.log("Response coming in hot $$$$$", history);
+        history.messages.forEach((message) => {
+          console.log("checking the history of messages", message, msg.message);
+          if (message.user === msg.message.user.id && message.thread_ts === msg.message.thread_ts) {
+            console.log("going to try to delete a message");
+            web.chat.delete({
+              channel: channel,
+              ts: message.ts
+            });
+          }
+        });
+      }
+    }
   }
 
   async function respondWithLeaderLoserBoard(msg) {
