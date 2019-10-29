@@ -33,7 +33,7 @@ const scoresDocumentName = 'scores';
 const logDocumentName = 'scoreLog';
 
 class ScoreKeeper {
-  constructor(robot, uri, peerFeedbackUrl,  spamMessage, furtherFeedbackScore = 10,) {
+  constructor(robot, uri, peerFeedbackUrl, spamMessage, furtherFeedbackScore = 10, ) {
     this.uri = uri;
     this.robot = robot;
     this.peerFeedbackUrl = peerFeedbackUrl;
@@ -103,7 +103,7 @@ class ScoreKeeper {
           [`reasons.${reason}`]: 1,
         };
       }
-      
+
       await this.savePointsGiven(from, toUser.name, 1);
       return this.saveUser(toUser, from, room, reason, incScoreObj);
     }
@@ -121,7 +121,7 @@ class ScoreKeeper {
         };
       }
 
-      
+
       await this.savePointsGiven(from, toUser.name, -1);
       return this.saveUser(toUser, from, room, reason, decScoreObj);
     }
@@ -159,18 +159,25 @@ class ScoreKeeper {
       from: from.name,
       to: user,
       date: new Date(),
-    });
+    }, {},
+      {
+        returnOriginal: false, upsert: true
+      });
   }
 
   async savePointsGiven(from, to, score) {
     const db = await this.getDb();
     const cleanName = helpers.cleanAndEncode(to);
-    
+
     const incObject = { [`pointsGiven.${cleanName}`]: score };
     const result = await db.collection(scoresDocumentName)
       .findOneAndUpdate(
-        { name: from.name },
-        { $inc: incObject },
+        {
+          name: from.name
+        },
+        {
+          $inc: incObject
+        },
         { returnOriginal: false, upsert: true },
       );
     const updatedUser = result.value;

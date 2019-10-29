@@ -167,7 +167,7 @@ module.exports = function plusPlus(robot) {
 
     const score = await scoreKeeper.scoreForUser(name);
     const reasons = await scoreKeeper.reasonsForUser(name);
-    
+
     if (typeof reasons === 'object' && Object.keys(reasons).length > 0) {
       const reasonMap = _.reduce(reasons, (memo, val, key) => {
         const decodedKey = helper.decode(key);
