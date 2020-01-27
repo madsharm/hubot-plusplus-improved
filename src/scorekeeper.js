@@ -33,12 +33,12 @@ const scoresDocumentName = 'scores';
 const logDocumentName = 'scoreLog';
 
 class ScoreKeeper {
-  constructor(robot, uri, peerFeedbackUrl,  spamMessage, furtherFeedbackScore = 10,) {
+  constructor(robot, uri, peerFeedbackUrl, spamMessage, furtherFeedbackScore = 10) {
     this.uri = uri;
     this.robot = robot;
     this.peerFeedbackUrl = peerFeedbackUrl;
     this.furtherFeedbackScore = parseInt(furtherFeedbackScore, 10);
-    this.spamMessage = spamMessage
+    this.spamMessage = spamMessage;
   }
 
   async init() {
@@ -126,7 +126,6 @@ class ScoreKeeper {
         };
       }
 
-
       await this.savePointsGiven(from, toUser.name, -1);
       return this.saveUser(toUser, from, room, reason, decScoreObj);
     }
@@ -183,7 +182,6 @@ class ScoreKeeper {
       this.robot.logger.debug(`${from.name} has sent a lot of points to ${to} suggesting further feedback`);
       this.robot.messageRoom(from.id, `Looks like you've given ${to} quite a few points, maybe you should look at submitting a ${this.peerFeedbackUrl}`);
     }
-    return;
   }
 
   // eslint-disable-next-line

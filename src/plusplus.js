@@ -35,10 +35,10 @@ const helper = require('./helpers');
 
 module.exports = function plusPlus(robot) {
   const mongoUri = process.env.MONGODB_URI || process.env.MONGODB_URL || process.env.MONGOLAB_URI || process.env.MONGOHQ_URL || 'mongodb://localhost/plusPlus';
-  const spamMessage = process.env.HUBOT_SPAM_MESSAGE || `Looks like you hit the spam filter. Please slow your role.`;
+  const spamMessage = process.env.HUBOT_SPAM_MESSAGE || 'Looks like you hit the spam filter. Please slow your role.';
   const futherFeedbackSuggestedScore = process.env.HUBOT_FURTHER_FEEDBACK_SCORE;
   const companyName = process.env.HUBOT_COMPANY_NAME || 'company';
-  const peerFeedbackUrl = process.env.HUBOT_PEER_FEEDBACK_URL || `'Small Improvements' (${companyName}.small-improvements.com)`;
+  const peerFeedbackUrl = process.env.HUBOT_PEER_FEEDBACK_URL || `'Lattice' (https://${companyName}.latticehq.com/)`;
   const reasonsKeyword = process.env.HUBOT_PLUSPLUS_REASONS || 'reasons';
   const scoreKeeper = new ScoreKeeper(robot, mongoUri, peerFeedbackUrl, spamMessage, futherFeedbackSuggestedScore);
   scoreKeeper.init();
@@ -167,7 +167,7 @@ module.exports = function plusPlus(robot) {
 
     const score = await scoreKeeper.scoreForUser(name);
     const reasons = await scoreKeeper.reasonsForUser(name);
-    
+
     if (typeof reasons === 'object' && Object.keys(reasons).length > 0) {
       const reasonMap = _.reduce(reasons, (memo, val, key) => {
         const decodedKey = helper.decode(key);
