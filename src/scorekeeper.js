@@ -9,12 +9,12 @@ const helpers = require('./helpers');
  *   reasons: ReasonsObject
  *   pointsGiven: PointsGivenObject
  * }
- * 
+ *
  * ReasonsObject:
  * {
  *   [reason]: int
  * }
- * 
+ *
  * PointsGivenObject:
  * {
  *   [to]: int
@@ -33,12 +33,12 @@ const scoresDocumentName = 'scores';
 const logDocumentName = 'scoreLog';
 
 class ScoreKeeper {
-  constructor(robot, uri, peerFeedbackUrl,  spamMessage, furtherFeedbackScore = 10,) {
+  constructor(robot, uri, peerFeedbackUrl, spamMessage, furtherFeedbackScore = 10) {
     this.uri = uri;
     this.robot = robot;
     this.peerFeedbackUrl = peerFeedbackUrl;
     this.furtherFeedbackScore = parseInt(furtherFeedbackScore, 10);
-    this.spamMessage = spamMessage
+    this.spamMessage = spamMessage;
   }
 
   async init() {
@@ -103,7 +103,7 @@ class ScoreKeeper {
           [`reasons.${reason}`]: 1,
         };
       }
-      
+
       await this.savePointsGiven(from, toUser.name, 1);
       return this.saveUser(toUser, from, room, reason, incScoreObj);
     }
@@ -121,7 +121,6 @@ class ScoreKeeper {
         };
       }
 
-      
       await this.savePointsGiven(from, toUser.name, -1);
       return this.saveUser(toUser, from, room, reason, decScoreObj);
     }
@@ -165,7 +164,7 @@ class ScoreKeeper {
   async savePointsGiven(from, to, score) {
     const db = await this.getDb();
     const cleanName = helpers.cleanAndEncode(to);
-    
+
     const incObject = { [`pointsGiven.${cleanName}`]: score };
     const result = await db.collection(scoresDocumentName)
       .findOneAndUpdate(
@@ -178,7 +177,6 @@ class ScoreKeeper {
       this.robot.logger.debug(`${from.name} has sent a lot of points to ${to} suggesting further feedback`);
       this.robot.messageRoom(from.id, `Looks like you've given ${to} quite a few points, maybe you should look at submitting a ${this.peerFeedbackUrl}`);
     }
-    return;
   }
 
   // eslint-disable-next-line

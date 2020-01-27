@@ -101,14 +101,15 @@ function getMessageForNewScore(score, name, messageOperator, reason, reasonScore
       const upOrDown = messageOperator === '++' ? 'subir' : 'bajar';
       return `podríamos ${upOrDown} un gradin la calefa???\nLa temperatura debería estar en ${score} ℃.`;
     }
-    let scoreStr = `${name} has ${score} points`, reasonStr = `.`;
+    let scoreStr = `${name} has ${score} points`;
+    let reasonStr = '.';
     if (score === 1) {
       scoreStr = `${name} has ${score} point`;
     }
     if (score % 100 === 0) {
-      const extraFlare = `:${(score / 100 * 100).toString()}:`;
+      const extraFlare = `:${(score).toString()}:`;
       scoreStr = `${extraFlare} ${scoreStr} ${extraFlare}`;
-      reasonStr = ``;
+      reasonStr = '';
     }
 
     if (reason) {
