@@ -9,12 +9,12 @@ const helpers = require('./helpers');
  *   reasons: ReasonsObject
  *   pointsGiven: PointsGivenObject
  * }
- * 
+ *
  * ReasonsObject:
  * {
  *   [reason]: int
  * }
- * 
+ *
  * PointsGivenObject:
  * {
  *   [to]: int
@@ -88,7 +88,7 @@ class ScoreKeeper {
 
     this.saveSpamLog(user.name, from, room, reason);
 
-    this.robot.logger.debug(`Saving user original: [${user.name}: ${user.score} ${user.reasons[reason] || 'none'}], new [${updatedUser.name}: ${updatedUser.score} ${updatedUser.reasons[reason] || 'none'}]`);
+    this.robot.logger.debug(`Saving user original: [${user.name}: ${user.score} ${(user.reasons && user.reasons[reason]) || 'none'}], new [${updatedUser.name}: ${updatedUser.score} ${(updatedUser.reasons && updatedUser.reasons[reason]) || 'none'}]`);
 
     return [updatedUser.score, updatedUser.reasons[reason] || 'none'];
   }
@@ -103,7 +103,7 @@ class ScoreKeeper {
           [`reasons.${reason}`]: 1,
         };
       }
-      
+
       await this.savePointsGiven(from, toUser.name, 1);
       return this.saveUser(toUser, from, room, reason, incScoreObj);
     }
@@ -121,7 +121,7 @@ class ScoreKeeper {
         };
       }
 
-      
+
       await this.savePointsGiven(from, toUser.name, -1);
       return this.saveUser(toUser, from, room, reason, decScoreObj);
     }
@@ -165,7 +165,7 @@ class ScoreKeeper {
   async savePointsGiven(from, to, score) {
     const db = await this.getDb();
     const cleanName = helpers.cleanAndEncode(to);
-    
+
     const incObject = { [`pointsGiven.${cleanName}`]: score };
     const result = await db.collection(scoresDocumentName)
       .findOneAndUpdate(
